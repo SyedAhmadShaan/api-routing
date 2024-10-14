@@ -1,60 +1,120 @@
+"use client";
 import React from "react";
 import { EnvelopeOpenIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import Link from "next/link";
+import { loginSchema } from "@/lib/validation/schema";
 
-const Home = () => {
+export default function Home() {
+  const form = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
+    try {
+      // API call to login
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("Login failed");
+      }
+
+      // Handle successful login here
+      console.log("Login successful");
+    } catch (err) {
+      console.error("Login error:", err);
+      // Handle login error here (e.g., show error message to user)
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="flex flex-col items-center justify-center w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">
           Welcome to My App
         </h1>
+
         <p className="text-lg text-gray-600 mb-8">Please log in to continue.</p>
-        <form className="w-full">
-          <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-gray-700 font-bold mb-2"
-            >
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="mb-6">
+                  <FormLabel className="block text-gray-700 font-bold mb-2">
+                    Email
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your email"
+                      type="email"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="mb-6">
-            <label
-              htmlFor="password"
-              className="block text-gray-700 font-bold mb-2"
-            >
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+
+            <FormField
+              name="password"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem className="mb-6">
+                  <FormLabel className="block text-gray-700 font-bold mb-2">
+                    Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your password"
+                      type="password"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="flex items-center justify-between">
-            <Button>
-              <EnvelopeOpenIcon className="mr-2 h-4 w-4" /> Login with Email
-            </Button>
-            <a
-              className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-              href="#"
-            >
-              Forgot Password?
-            </a>
-          </div>
-        </form>
+            <div className="flex items-center justify-between">
+              <Button type="submit">
+                <EnvelopeOpenIcon className="mr-2 h-4 w-4" /> Login with Email
+              </Button>
+              <Link
+                href="/forgot-password"
+                className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );
-};
-
-export default Home;
+}
